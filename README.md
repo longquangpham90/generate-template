@@ -21,6 +21,11 @@ Clone the project with submodules to ensure template files are included:
 git clone --recurse-submodules git@github:longquangpham90/generate-template.git tools
 ```
 
+or
+
+```bash
+mkdir tools && cd tools && git clone https://github.com/longquangpham90/generate-template.git .
+```
 ---
 
 ## 🚀 Usage
