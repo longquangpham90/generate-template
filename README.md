@@ -18,7 +18,7 @@ A simple tool to generate **Java/Kotlin templates** CA MVVM for Android projects
 Clone the project with submodules to ensure template files are included:
 
 ```bash
-git clone --recurse-submodules https://github.com/longquangpham90/generate-template.git tools
+git clone --recurse-submodules git@github:longquangpham90/generate-template.git tools
 ```
 
 ---
