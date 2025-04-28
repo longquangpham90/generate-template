@@ -9,7 +9,7 @@ usage() {
   exit 1
 }
 
-remove_serializedname() {
+removeSerializedName() {
   echo "Removing all @SerializedName and import from file/folder: $1"
 
   if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -23,7 +23,7 @@ remove_serializedname() {
   echo "Finished removing @SerializedName and import."
 }
 
-add_serializedname() {
+addSerializedName() {
   echo "Adding @SerializedName to all 'val' properties in file/folder: $1"
 
   # Check if the import already exists
@@ -68,17 +68,17 @@ import com.google.gson.annotations.SerializedName
   echo "Finished adding @SerializedName and import."
 }
 
-reset_and_add_serializedname() {
+resetAndAddSerializedName() {
   echo "Removing all @SerializedName and import, then adding @SerializedName back in file/folder: $1"
 
   # Remove all @SerializedName and import
-  remove_serializedname "$1"
+  removeSerializedName "$1"
 
   # Add @SerializedName back
-  add_serializedname "$1"
+  addSerializedName "$1"
 }
 
-auto_format() {
+autoFormat() {
   echo "Automatically formatting Kotlin file using ktlint in file/folder: $1"
 
   # Check if ktlint is installed
@@ -92,7 +92,7 @@ auto_format() {
   echo "Finished formatting with ktlint."
 }
 
-process_files() {
+processFiles() {
   # Check if path is a file or directory
   if [[ -d "$1" ]]; then
     for file in "$1"/*.kt; do
@@ -112,16 +112,16 @@ process_file() {
 
   case "$option" in
     -r)
-      remove_serializedname "$file"
-      auto_format "$file"
+      removeSerializedName "$file"
+      autoFormat "$file"
       ;;
     -a)
-      add_serializedname "$file"
-      auto_format "$file"
+      addSerializedName "$file"
+      autoFormat "$file"
       ;;
     -ra)
-      reset_and_add_serializedname "$file"
-      auto_format "$file"
+      resetAndAddSerializedName "$file"
+      autoFormat "$file"
       ;;
     *)
       usage
@@ -137,4 +137,4 @@ fi
 path="$1"
 option="$2"
 
-process_files "$path" "$option"
+processFiles "$path" "$option"
