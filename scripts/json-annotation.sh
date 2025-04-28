@@ -13,10 +13,10 @@ remove_serializedname() {
   echo "Removing all @SerializedName and import from file/folder: $1"
 
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -E -i '' 's/@SerializedName\([^)]*\)[[:space:]]*,?[[:space:]]*//g' "$1"
+    sed -E -i '' 's/@(field:)?SerializedName\([^)]*\)[[:space:]]*(,)?[[:space:]]*//g' "$1"
     sed -E -i '' '/import com\.google\.gson\.annotations\.SerializedName/d' "$1"
   else
-    sed -E -i 's/@SerializedName\([^)]*\)[[:space:]]*,?[[:space:]]*//g' "$1"
+    sed -E -i 's/@(field:)?SerializedName\([^)]*\)[[:space:]]*(,)?[[:space:]]*//g' "$1"
     sed -E -i '/import com\.google\.gson\.annotations\.SerializedName/d' "$1"
   fi
 
