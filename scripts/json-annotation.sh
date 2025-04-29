@@ -29,107 +29,6 @@ removeSerializedName() {
 
   echo "Finished removing @SerializedName and import from: $1"
 }
-addSerializedName() {
-  file="$1"
-
-  echo "Adding @SerializedName to file: $file"
-
-  # Determine extension
-  extension="${file##*.}"
-
-  # Check for unsupported file types first
-  if [[ "$extension" != "kt" && "$extension" != "java" ]]; then
-    echo "Unsupported file type: $extension"
-    return
-  fi
-
-  # Prefer processing Java files first
-  if [[ "$extension" == "java" ]]; then
-    # Java file: Always add import with semicolon if missing
-    echo "Adding import for SerializedName..."
-    if ! grep -q 'import com\.google\.gson\.annotations\.SerializedName' "$file"; then
-      if grep -q '^package ' "$file"; then
-        # Add import after package declaration
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-          sed -E -i '' '/^package /a\
-import com.google.gson.annotations.SerializedName;
-' "$file"
-        else
-          sed -E -i '/^package /a import com.google.gson.annotations.SerializedName;' "$file"
-        fi
-      else
-        # Add import at the beginning (if no package statement is found)
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-          sed -E -i '' '1i\
-import com.google.gson.annotations.SerializedName;
-' "$file"
-        else
-          sed -E -i '1i import com.google.gson.annotations.SerializedName;' "$file"
-        fi
-      fi
-    else
-      echo "Import already exists, skipping."
-    fi
-
-    # Process Java file lines
-    tmpfile=$(mktemp)
-    while IFS= read -r line; do
-      # Improved regex to capture public, private, protected modifiers, with complex types
-      if [[ "$line" =~ ^[[:space:]]*(private|public|protected)[[:space:]]+([a-zA-Z0-9_<>?,\[\]]+)[[:space:]]+([a-zA-Z0-9_]+)[[:space:]]*[\;] ]]; then
-        varname="${BASH_REMATCH[3]}"  # Capture the variable name
-        echo "    @SerializedName(\"$varname\")" >> "$tmpfile"
-        echo "$line" >> "$tmpfile"
-      else
-        echo "$line" >> "$tmpfile"
-      fi
-    done < "$file"
-
-    mv "$tmpfile" "$file"
-    echo "Finished adding @SerializedName for Java file."
-
-  elif [[ "$extension" == "kt" ]]; then
-    # Kotlin file: Add import without semicolon if missing
-    echo "Adding import for SerializedName..."
-    if ! grep -q 'import com\.google\.gson\.annotations\.SerializedName' "$file"; then
-      if grep -q '^package ' "$file"; then
-        # Add import after package declaration (Kotlin)
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-          sed -E -i '' '/^package /a\
-import com.google.gson.annotations.SerializedName
-' "$file"
-        else
-          sed -E -i '/^package /a import com.google.gson.annotations.SerializedName' "$file"
-        fi
-      else
-        # Add import at the beginning (Kotlin)
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-          sed -E -i '' '1i\
-import com.google.gson.annotations.SerializedName
-' "$file"
-        else
-          sed -E -i '1i import com.google.gson.annotations.SerializedName' "$file"
-        fi
-      fi
-    else
-      echo "Import already exists, skipping."
-    fi
-
-    # Process Kotlin file lines
-    tmpfile=$(mktemp)
-    while IFS= read -r line; do
-      if [[ "$line" =~ ^[[:space:]]*(val|var)[[:space:]]+([a-zA-Z0-9_]+): ]]; then
-        varname="${BASH_REMATCH[2]}"
-        echo "    @SerializedName(\"$varname\")" >> "$tmpfile"
-        echo "$line" >> "$tmpfile"
-      else
-        echo "$line" >> "$tmpfile"
-      fi
-    done < "$file"
-
-    mv "$tmpfile" "$file"
-    echo "Finished adding @SerializedName for Kotlin file."
-  fi
-}
 
 addSerializedName() {
   file="$1"
@@ -186,11 +85,8 @@ import com.google.gson.annotations.SerializedName;
             previous_line="$line"
             continue
         fi
-        # Nếu current line kết thúc bằng ';' (field)
         if echo "$trimmed_current" | grep -qE ';[[:space:]]*$'; then
-          # Nếu previous line KHÔNG chứa @SerializedName
           if ! echo "$trimmed_previous" | grep -qE '^\s*@SerializedName'; then
-            # Lấy tên biến
             var_name=$(echo "$trimmed_current" | awk -F'[ ;=]+' '{print $(NF-1)}')
             if [[ "$var_name" != "com.google.gson.annotations.SerializedName" ]]; then
               echo "    @SerializedName(\"$var_name\")" >> "$tmpfile"
@@ -314,7 +210,6 @@ processFile() {
     autoFormat "$file"
   fi
 }
-
 
 # Main
 if [[ $# -ne 2 ]]; then
