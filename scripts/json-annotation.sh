@@ -11,61 +11,245 @@ usage() {
 
 removeSerializedName() {
   echo "Removing all @SerializedName and import from file/folder: $1"
+  ext="${1##*.}"
+  if [[ "$ext" != "kt" && "$ext" != "java" ]]; then
+    echo "Skipped (unsupported file extension: .$ext): $1"
+    return
+  fi
 
   if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -E -i '' 's/@(field:)?SerializedName\([^)]*\)[[:space:]]*(,)?[[:space:]]*//g' "$1"
-    sed -E -i '' '/import com\.google\.gson\.annotations\.SerializedName/d' "$1"
+    sed -E -i '' '/^\s*import\s+com\.google\.gson\.annotations\.SerializedName\s*;/d' "$1"
+    sed -E -i '' '/^\s*import\s+com\.google\.gson\.annotations\.SerializedName\s*$/d' "$1"
   else
     sed -E -i 's/@(field:)?SerializedName\([^)]*\)[[:space:]]*(,)?[[:space:]]*//g' "$1"
-    sed -E -i '/import com\.google\.gson\.annotations\.SerializedName/d' "$1"
+    sed -E -i '/^\s*import\s+com\.google\.gson\.annotations\.SerializedName\s*;/d' "$1"
+    sed -E -i '/^\s*import\s+com\.google\.gson\.annotations\.SerializedName\s*$/d' "$1"
   fi
 
-  echo "Finished removing @SerializedName and import."
+  echo "Finished removing @SerializedName and import from: $1"
+}
+addSerializedName() {
+  file="$1"
+
+  echo "Adding @SerializedName to file: $file"
+
+  # Determine extension
+  extension="${file##*.}"
+
+  # Check for unsupported file types first
+  if [[ "$extension" != "kt" && "$extension" != "java" ]]; then
+    echo "Unsupported file type: $extension"
+    return
+  fi
+
+  # Prefer processing Java files first
+  if [[ "$extension" == "java" ]]; then
+    # Java file: Always add import with semicolon if missing
+    echo "Adding import for SerializedName..."
+    if ! grep -q 'import com\.google\.gson\.annotations\.SerializedName' "$file"; then
+      if grep -q '^package ' "$file"; then
+        # Add import after package declaration
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          sed -E -i '' '/^package /a\
+import com.google.gson.annotations.SerializedName;
+' "$file"
+        else
+          sed -E -i '/^package /a import com.google.gson.annotations.SerializedName;' "$file"
+        fi
+      else
+        # Add import at the beginning (if no package statement is found)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          sed -E -i '' '1i\
+import com.google.gson.annotations.SerializedName;
+' "$file"
+        else
+          sed -E -i '1i import com.google.gson.annotations.SerializedName;' "$file"
+        fi
+      fi
+    else
+      echo "Import already exists, skipping."
+    fi
+
+    # Process Java file lines
+    tmpfile=$(mktemp)
+    while IFS= read -r line; do
+      # Improved regex to capture public, private, protected modifiers, with complex types
+      if [[ "$line" =~ ^[[:space:]]*(private|public|protected)[[:space:]]+([a-zA-Z0-9_<>?,\[\]]+)[[:space:]]+([a-zA-Z0-9_]+)[[:space:]]*[\;] ]]; then
+        varname="${BASH_REMATCH[3]}"  # Capture the variable name
+        echo "    @SerializedName(\"$varname\")" >> "$tmpfile"
+        echo "$line" >> "$tmpfile"
+      else
+        echo "$line" >> "$tmpfile"
+      fi
+    done < "$file"
+
+    mv "$tmpfile" "$file"
+    echo "Finished adding @SerializedName for Java file."
+
+  elif [[ "$extension" == "kt" ]]; then
+    # Kotlin file: Add import without semicolon if missing
+    echo "Adding import for SerializedName..."
+    if ! grep -q 'import com\.google\.gson\.annotations\.SerializedName' "$file"; then
+      if grep -q '^package ' "$file"; then
+        # Add import after package declaration (Kotlin)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          sed -E -i '' '/^package /a\
+import com.google.gson.annotations.SerializedName
+' "$file"
+        else
+          sed -E -i '/^package /a import com.google.gson.annotations.SerializedName' "$file"
+        fi
+      else
+        # Add import at the beginning (Kotlin)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          sed -E -i '' '1i\
+import com.google.gson.annotations.SerializedName
+' "$file"
+        else
+          sed -E -i '1i import com.google.gson.annotations.SerializedName' "$file"
+        fi
+      fi
+    else
+      echo "Import already exists, skipping."
+    fi
+
+    # Process Kotlin file lines
+    tmpfile=$(mktemp)
+    while IFS= read -r line; do
+      if [[ "$line" =~ ^[[:space:]]*(val|var)[[:space:]]+([a-zA-Z0-9_]+): ]]; then
+        varname="${BASH_REMATCH[2]}"
+        echo "    @SerializedName(\"$varname\")" >> "$tmpfile"
+        echo "$line" >> "$tmpfile"
+      else
+        echo "$line" >> "$tmpfile"
+      fi
+    done < "$file"
+
+    mv "$tmpfile" "$file"
+    echo "Finished adding @SerializedName for Kotlin file."
+  fi
 }
 
 addSerializedName() {
-  echo "Adding @SerializedName to all 'val' properties in file/folder: $1"
+  file="$1"
 
-  # Check if the import already exists
-  if ! grep -q 'import com\.google\.gson\.annotations\.SerializedName' "$1"; then
-    echo "Import not found, adding it..."
-    if grep -q '^package ' "$1"; then
-      if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -E -i '' '/^package /a\
-import com.google.gson.annotations.SerializedName
-' "$1"
-      else
-        sed -E -i '/^package /a import com.google.gson.annotations.SerializedName' "$1"
-      fi
-    else
-      if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -E -i '' '1i\
-import com.google.gson.annotations.SerializedName
-' "$1"
-      else
-        sed -E -i '1i import com.google.gson.annotations.SerializedName' "$1"
-      fi
-    fi
-  else
-    echo "Import already exists, skipping."
+  echo "Adding @SerializedName to file: $file"
+
+  # Determine extension
+  extension="${file##*.}"
+
+  # Check for unsupported file types first
+  if [[ "$extension" != "kt" && "$extension" != "java" ]]; then
+    echo "Unsupported file type: $extension"
+    return
   fi
 
-  # Add @SerializedName above each 'val'
-  tmpfile=$(mktemp)
-  while IFS= read -r line
-  do
-    if [[ "$line" =~ ^[[:space:]]*val[[:space:]]+([a-zA-Z0-9_]+): ]]; then
-      varname="${BASH_REMATCH[1]}"
-      echo "    @SerializedName(\"$varname\")" >> "$tmpfile"
-      echo "$line" >> "$tmpfile"
+  # Prefer processing Java files first
+  if [[ "$extension" == "java" ]]; then
+    echo "Processing Java file: $file"
+    # Java file: Always add import with semicolon if missing
+    echo "Checking for import of SerializedName..."
+    if ! grep -q 'import com\.google\.gson\.annotations\.SerializedName' "$file"; then
+      echo "Import not found. Adding import..."
+      if grep -q '^package ' "$file"; then
+        # Add import after package declaration
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          sed -E -i '' '/^package /a\
+import com.google.gson.annotations.SerializedName;
+' "$file"
+        else
+          sed -E -i '/^package /a import com.google.gson.annotations.SerializedName;' "$file"
+        fi
+      else
+        # Add import at the beginning (if no package statement is found)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          sed -E -i '' '1i\
+import com.google.gson.annotations.SerializedName;
+' "$file"
+        else
+          sed -E -i '1i import com.google.gson.annotations.SerializedName;' "$file"
+        fi
+      fi
     else
-      echo "$line" >> "$tmpfile"
+      echo "Import already exists, skipping."
     fi
-  done < "$1"
 
-  mv "$tmpfile" "$1"
+    # Process Java file lines
+    tmpfile=$(mktemp)
+    previous_line=""
+    while IFS= read -r line; do
+        trimmed_current=$(echo "$line" | sed 's/^[[:space:]]*//')
+        trimmed_previous=$(echo "$previous_line" | sed 's/^[[:space:]]*//')
+        if [[ "$trimmed_current" == package* || "$trimmed_current" == import* ]]; then
+            echo "$line" >> "$tmpfile"
+            previous_line="$line"
+            continue
+        fi
+        # Nếu current line kết thúc bằng ';' (field)
+        if echo "$trimmed_current" | grep -qE ';[[:space:]]*$'; then
+          # Nếu previous line KHÔNG chứa @SerializedName
+          if ! echo "$trimmed_previous" | grep -qE '^\s*@SerializedName'; then
+            # Lấy tên biến
+            var_name=$(echo "$trimmed_current" | awk -F'[ ;=]+' '{print $(NF-1)}')
+            if [[ "$var_name" != "com.google.gson.annotations.SerializedName" ]]; then
+              echo "    @SerializedName(\"$var_name\")" >> "$tmpfile"
+            fi
+          fi
+        fi
 
-  echo "Finished adding @SerializedName and import."
+        echo "$line" >> "$tmpfile"
+        previous_line="$line"
+    done < "$file"
+    mv "$tmpfile" "$file"
+    echo "Finished adding @SerializedName for Java file."
+  elif [[ "$extension" == "kt" ]]; then
+    # Kotlin file: Add import without semicolon if missing
+    echo "Processing Kotlin file: $file"
+    if ! grep -q 'import com\.google\.gson\.annotations\.SerializedName' "$file"; then
+      echo "Import not found. Adding import..."
+      if grep -q '^package ' "$file"; then
+        # Add import after package declaration (Kotlin)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          sed -E -i '' '/^package /a\
+import com.google.gson.annotations.SerializedName
+' "$file"
+        else
+          sed -E -i '/^package /a import com.google.gson.annotations.SerializedName' "$file"
+        fi
+      else
+        # Add import at the beginning (Kotlin)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          sed -E -i '' '1i\
+import com.google.gson.annotations.SerializedName
+' "$file"
+        else
+          sed -E -i '1i import com.google.gson.annotations.SerializedName' "$file"
+        fi
+      fi
+    else
+      echo "Import already exists, skipping."
+    fi
+
+    # Process Kotlin file lines
+    tmpfile=$(mktemp)
+    while IFS= read -r line; do
+      if [[ "$line" =~ "@SerializedName" ]]; then
+        echo "$line" >> "$tmpfile"  # Skip adding annotation if already present
+      elif [[ "$line" =~ ^[[:space:]]*(val|var)[[:space:]]+([a-zA-Z0-9_]+): ]]; then
+        varname="${BASH_REMATCH[2]}"
+        if ! grep -q "@SerializedName(\"$varname\")" "$file"; then
+          echo "    @SerializedName(\"$varname\")" >> "$tmpfile"
+        fi
+        echo "$line" >> "$tmpfile"
+      else
+        echo "$line" >> "$tmpfile"
+      fi
+    done < "$file"
+
+    mv "$tmpfile" "$file"
+    echo "Finished adding @SerializedName for Kotlin file."
+  fi
 }
 
 resetAndAddSerializedName() {
@@ -95,39 +279,42 @@ autoFormat() {
 processFiles() {
   # Check if path is a file or directory
   if [[ -d "$1" ]]; then
-    for file in "$1"/*.kt; do
-      process_file "$file" "$2"
+    find "$1" \( -name "*.kt" -o -name "*.java" \) | while read -r file; do
+      processFile "$file" "$2"
     done
   elif [[ -f "$1" ]]; then
-    process_file "$1" "$2"
+    processFile "$1" "$2"
   else
     echo "Invalid file or folder: $1"
     exit 1
   fi
 }
 
-process_file() {
+processFile() {
   file="$1"
   option="$2"
 
   case "$option" in
     -r)
       removeSerializedName "$file"
-      autoFormat "$file"
       ;;
     -a)
       addSerializedName "$file"
-      autoFormat "$file"
       ;;
     -ra)
       resetAndAddSerializedName "$file"
-      autoFormat "$file"
       ;;
     *)
       usage
       ;;
   esac
+
+  # Only auto format if file is Kotlin (.kt)
+  if [[ "$file" == *.kt ]]; then
+    autoFormat "$file"
+  fi
 }
+
 
 # Main
 if [[ $# -ne 2 ]]; then
