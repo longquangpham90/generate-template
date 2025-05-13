@@ -43,13 +43,18 @@ Install `ktlint`
 
 ## 🚀 Usage
 
-Run the script to generate templates:
+### Convert folder SVG to XML
+```bash
+bin/bash [path-to-project]tools/scripts/convertSVG2Android.sh <input_svg_folder>"
+```
+
+### Run the script to generate templates:
 
 ```bash
 /bin/bash [path-to-project]/tools/scripts/createTempPrompt.sh
 ```
 
-How to Use the Script Json Annotation Tool
+### How to Use the Script Json Annotation Tool
 
 - **General Syntax**:
   ```bash
