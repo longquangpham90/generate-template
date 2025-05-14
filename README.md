@@ -45,7 +45,7 @@ Install `ktlint`
 
 ### Convert folder SVG to XML
 ```bash
-bin/bash [path-to-project]/tools/scripts/convertSVG2Android.sh <input_svg_folder>
+bin/bash [path-to-project]/tools/scripts/convert/svg2android.sh <input_svg_folder>
 ```
 
 ### Run the script to generate templates:

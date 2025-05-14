@@ -11,7 +11,7 @@ fi
 
 INPUT_DIR="$1"
 ROOT_PROJECT=$(git rev-parse --show-toplevel)
-JAR_FILE="/${ROOT_PROJECT}/tools/scripts/svg2android.jar"
+JAR_FILE="/${ROOT_PROJECT}/tools/scripts/convert-xml/svg2android.jar"
 
 echo "=== file://$JAR_FILE"
 # Check if the input folder exists
