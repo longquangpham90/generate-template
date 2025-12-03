@@ -1,5 +1,19 @@
 #!/bin/bash
 chmod +x "$(realpath "$0")"
+# Check install envsubst ready
+if ! command -v envsubst >/dev/null 2>&1; then
+  echo "⚠️  envsubst NOT install, installing..."
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "❌ Homebrew not installed. Please install it first:"
+    echo '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+    exit 1
+  fi
+  brew install gettext
+  brew link --force gettext
+else
+  echo "✅ envsubst installed"
+fi
+
 # Function to convert CamelCase to snake_case
 camel_to_snake() {
   echo "$1" | sed -E 's/([a-z0-9])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]'
