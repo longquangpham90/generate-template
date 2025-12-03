@@ -58,7 +58,7 @@ bin/bash [path-to-project]/tools/scripts/convert/svg2android.sh <input_svg_folde
 
 - **General Syntax**:
   ```bash
-  ./json-annotation.sh <path_to_file_or_folder> <option>
+  ./scripts/json-annotation.sh <path_to_file_or_folder> <option>
   ```
 
 - **Options**:
@@ -71,24 +71,29 @@ Usage Examples
 
 - **Remove `@SerializedName` and import**:
   ```bash
-  ./manage_serializedname.sh path/to/file.kt -r
+  ./scripts/manage_serializedname.sh path/to/file.kt -r
   ```
 
 - **Add `@SerializedName` and import**:
   ```bash
-  ./manage_serializedname.sh path/to/file.kt -a
+  ./scripts/manage_serializedname.sh path/to/file.kt -a
   ```
 
 - **Combine: Remove and Re-add**:
   ```bash
-  ./manage_serializedname.sh path/to/file.kt -ra
+  ./scripts/manage_serializedname.sh path/to/file.kt -ra
   ```
 
 - **Apply to a folder**:
   ```bash
-  ./manage_serializedname.sh models/ -r
+  ./scripts/manage_serializedname.sh models/ -r
   ```
-
+  
+- **Check 16K page size**:
+  ```bash
+  ./scripts/check_elf_alignment.sh
+  ```
+  
 ## Notes
 
 - After making changes, `ktlint` will automatically format the code to ensure it's clean and follows
