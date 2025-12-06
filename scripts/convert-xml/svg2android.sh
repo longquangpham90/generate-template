@@ -21,7 +21,7 @@ fi
 
 # ===== ROOT PROJECT & JAR =====
 ROOT_PROJECT=$(git rev-parse --show-toplevel 2>/dev/null || echo "$ROOT_DIR")
-JAR_FILE="${ROOT_PROJECT}/tools/build/libs/svgToAndroid-1.0.0.jar"
+JAR_FILE="${ROOT_PROJECT}/tools/scripts/convert-xml/svgToAndroid-1.0.0.jar"
 
 echo "=== Using JAR: file://$JAR_FILE"
 
@@ -57,9 +57,9 @@ for file in "$INPUT_DIR/ProcessedSVG"/*.xml; do
     basename="${filename%.xml}"
     safeBasename="$(echo "$basename" | tr '[:upper:]' '[:lower:]')"
     safeBasename="${safeBasename//[^a-z0-9_]/_}"
-    newname="${PREFIX}${safeBasename}.xml"
-    echo "DEBUG: Moving '$filename' -> '$newname'"
-    mv "$file" "$ROOT_DIR/$newname"
+    newName="${PREFIX}${safeBasename}.xml"
+    echo "DEBUG: Moving '$filename' -> '$newName'"
+    mv "$file" "$ROOT_DIR/$newName"
 done
 
 # ===== CLEANUP =====
