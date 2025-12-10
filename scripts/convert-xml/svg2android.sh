@@ -20,8 +20,10 @@ if [ -z "$PREFIX" ]; then
 fi
 
 # ===== ROOT PROJECT & JAR =====
+FILE_BUILD="svgToAndroid-1.0.0.jar"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_PROJECT=$(git rev-parse --show-toplevel 2>/dev/null || echo "$ROOT_DIR")
-JAR_FILE="${ROOT_PROJECT}/tools/scripts/convert-xml/svgToAndroid-1.0.0.jar"
+JAR_FILE="$SCRIPT_DIR/$FILE_BUILD"
 
 echo "=== Using JAR: file://$JAR_FILE"
 
@@ -32,7 +34,7 @@ if [ ! -d "$INPUT_DIR" ]; then
 fi
 
 if [ ! -f "$JAR_FILE" ]; then
-    echo "❌ svgToAndroid-1.0.0.jar file not found: $JAR_FILE"
+    echo "❌ $FILE_BUILD file not found: $JAR_FILE"
     exit 1
 fi
 
