@@ -31,12 +31,19 @@ for pair in "${REPLACEMENTS[@]}"; do
   SED_COMMANDS+=("-e" "s|<$from|<$to|g" "-e" "s|</$from>|</$to>|g")
 done
 
-SED_COMMANDS+=("-e" '/^[[:space:]]*$/d')
+PATTERN=$(printf "%s\n" "${REPLACEMENTS[@]%%|*}" | paste -sd "|" -)
 
-# Apply changes
-find "$ROOT_DIR" -type f -name "*.xml" ! -path "*/build/*" ! -path "*/.idea/*" ! -path "*/.gradle/*" | while read -r file; do
-  if grep -qE "$(IFS='|'; echo "${REPLACEMENTS[*]%%|*}" | sed 's/ /|/g')" "$file"; then
+find "$ROOT_DIR" -type f -name "*.xml" \
+  ! -path "*/build/*" ! -path "*/.idea/*" ! -path "*/.gradle/*" | while read -r file; do
+  MODIFIED=false
+  if grep -qE "$PATTERN" "$file"; then
     sed "${SED_INPLACE[@]}" "${SED_COMMANDS[@]}" "$file"
-    echo "✅ Cleaned & updated: file://$file"
+    MODIFIED=true
+  fi
+  sed -i "" '/^[ \t]\{2,\}$/d' "$file"
+  awk 'NF || !blank++' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+
+  if $MODIFIED; then
+    echo "🧹 Cleaned & updated: $file"
   fi
 done
