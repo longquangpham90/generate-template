@@ -93,7 +93,11 @@ Usage Examples
   ```bash
   ./scripts/check_elf_alignment.sh
   ```
-  
+ 
+- **Remove Butterkinfe**:
+ ```bash
+  ./scripts/removeButterkinfe.sh
+  ``` 
 ## Notes
 
 - After making changes, `ktlint` will automatically format the code to ensure it's clean and follows
