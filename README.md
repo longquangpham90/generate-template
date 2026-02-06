@@ -98,6 +98,13 @@ Usage Examples
  ```bash
   ./scripts/removeButterkinfe.sh
   ``` 
+
+- **Gen Entity - Model - Mapper for flutter **:
+```shell
+chmod +x ./tools/scripts/flutter/gen_entity.sh
+./tools/scripts/flutter/gen_entity.sh
+```
+
 ## Notes
 
 - After making changes, `ktlint` will automatically format the code to ensure it's clean and follows
