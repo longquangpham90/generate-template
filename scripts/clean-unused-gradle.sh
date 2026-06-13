@@ -19,7 +19,7 @@ find_project_root() {
 project_root=$(find_project_root)
 
 # Extract current Gradle version
-gradle_version=$(grep distributionUrl "$project_root/gradle/wrapper/gradle-wrapper.properties" | sed -E 's/.*gradle-([0-9.]+)-bin.zip/\1/')
+gradle_version=$(grep distributionUrl "$project_root/gradle/wrapper/gradle-wrapper.properties" | sed -E 's/.*gradle-(.*)-(bin|all).zip/\1/')
 
 if [ -z "$gradle_version" ]; then
   echo "❌ Could not find Gradle version!"
@@ -38,7 +38,8 @@ clean_gradle_caches() {
   fi
 
   echo "🔍 Scanning $target_dir for versioned cache folders..."
-  find "$target_dir" -maxdepth 1 -type d | grep -E "/[0-9]+\.[0-9]+(\.[0-9]+)?$" | while read -r version_dir; do
+  # Match folders like 8.13, 9.5.1, 9.0-milestone-1
+  find "$target_dir" -maxdepth 1 -type d | grep -E "/[0-9]+\.[0-9]+[^/]*$" | while read -r version_dir; do
     version_name=$(basename "$version_dir")
     echo ">>> Checking $version_dir"
     if [[ "$version_name" != "$gradle_version" ]]; then
